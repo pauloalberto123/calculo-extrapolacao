@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Cálculo de Extrapolação</title>
+<title>Calculadora de Jornada Ferroviária</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -37,6 +37,10 @@
     min-height:100vh; display:flex; flex-direction:column; align-items:center;
     padding:48px 20px 64px;
   }
+  /* ===== Navegação entre telas (apenas uma .view ativa por vez) ===== */
+  .view{display:none;width:100%;max-width:760px;}
+  .view.active{display:block;}
+
   header{width:100%;max-width:760px;text-align:center;margin-bottom:36px;}
   .eyebrow{
     display:inline-flex;align-items:center;gap:8px;
@@ -64,12 +68,12 @@
     display:block;font-family:'Rajdhani',sans-serif;font-weight:600;font-size:13px;
     letter-spacing:.06em;text-transform:uppercase;color:var(--navy);margin-bottom:8px;
   }
-  input[type="datetime-local"]{
+  input[type="datetime-local"], input[type="time"]{
     width:100%;padding:13px 14px;border-radius:10px;border:1.5px solid var(--line);
     font-family:'Inter',sans-serif;font-size:15px;color:var(--ink);background:var(--input-bg);
     transition:border-color .15s ease,box-shadow .15s ease;
   }
-  input[type="datetime-local"]:focus{
+  input[type="datetime-local"]:focus, input[type="time"]:focus{
     outline:none;border-color:var(--navy-soft);box-shadow:0 0 0 3px rgba(28,58,99,.18);
   }
   button{
@@ -81,6 +85,29 @@
   button:hover{background:#1C3A63;}
   button:active{transform:translateY(1px);}
   button:focus-visible{outline:3px solid var(--gold-soft);outline-offset:2px;}
+
+  /* Botão secundário (Limpar / Voltar ao Início) */
+  button.ghost{
+    background:transparent;color:var(--navy);border:1.5px solid var(--line);
+  }
+  button.ghost:hover{background:var(--bg);}
+  .back-row{width:100%;max-width:760px;margin-bottom:20px;}
+  button.back{padding:10px 18px;font-size:13.5px;}
+
+  /* Cards da tela inicial */
+  .menu{display:grid;gap:14px;}
+  button.menu-card{
+    display:block;width:100%;text-align:left;background:var(--input-bg);color:var(--ink);
+    border:1.5px solid var(--line);border-left:6px solid var(--gold);border-radius:12px;
+    padding:18px 20px;text-transform:none;letter-spacing:0;
+  }
+  button.menu-card:hover{background:var(--bg);border-color:var(--navy-soft);border-left-color:var(--gold);}
+  .menu-card .t{
+    display:block;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:21px;
+    letter-spacing:.04em;text-transform:uppercase;color:var(--navy-deep);
+  }
+  .menu-card .d{display:block;font-family:'Inter',sans-serif;font-weight:400;font-size:14px;color:var(--ink-soft);margin-top:4px;line-height:1.45;}
+
   .error-msg{
     display:none;margin-top:14px;color:#9A2A2A;background:#FBEAEA;border:1px solid #F1C6C6;
     padding:10px 14px;border-radius:8px;font-size:13.5px;
@@ -118,58 +145,190 @@
 </head>
 <body>
 
-<header>
-  <div class="eyebrow">MRS &middot; Turnos &middot; Escala</div>
-  <h1>Cálculo de Extrapolação</h1>
-  <p class="subtitle">Informe a data e o horário de início do serviço para calcular automaticamente o momento em que o turno será extrapolado.</p>
-</header>
-
-<main>
-  <div class="rail"></div>
-  <div class="body-pad">
-
-    <div class="field-row">
-      <div class="field">
-        <label for="inicio">Início do serviço</label>
-        <input type="datetime-local" id="inicio" step="60">
+<!-- ================= TELA INICIAL ================= -->
+<section class="view active" id="view-home">
+  <header>
+    <div class="eyebrow">MRS &middot; Turnos &middot; Escala</div>
+    <h1>Calculadora de Jornada Ferroviária</h1>
+    <p class="subtitle">Realize cálculos relacionados à jornada e aos períodos de descanso. Escolha um módulo para começar.</p>
+  </header>
+  <main>
+    <div class="rail"></div>
+    <div class="body-pad">
+      <div class="menu">
+        <button type="button" class="menu-card" data-goto="view-extrapolacao">
+          <span class="t">Cálculo de Extrapolação</span>
+          <span class="d">Calcular o momento em que o turno será extrapolado a partir do início do serviço.</span>
+        </button>
+        <button type="button" class="menu-card" data-goto="view-fora">
+          <span class="t">Descanso Fora da Sede</span>
+          <span class="d">Calcular o horário de abertura da prontidão após o descanso no hotel.</span>
+        </button>
+        <button type="button" class="menu-card" data-goto="view-sede">
+          <span class="t">Descanso em Sede</span>
+          <span class="d">Calcular o horário mínimo para início da próxima atividade após o fechamento de cardeno.</span>
+        </button>
       </div>
-      <button id="btnCalcular" type="button">Calcular</button>
     </div>
+  </main>
+</section>
 
-    <div class="error-msg" id="errorMsg"></div>
+<!-- ================= MÓDULO 1: EXTRAPOLAÇÃO (original preservado) ================= -->
+<section class="view" id="view-extrapolacao">
+  <div class="back-row"><button type="button" class="ghost back" data-goto="view-home">&larr; Voltar ao Início</button></div>
 
-    <div class="result" id="resultBox">
-      <div class="result-label">Data/hora da extrapolação</div>
-      <div class="result-value" id="resultValue">--/--/---- --:--</div>
+  <header>
+    <div class="eyebrow">MRS &middot; Turnos &middot; Escala</div>
+    <h1>Cálculo de Extrapolação</h1>
+    <p class="subtitle">Informe a data e o horário de início do serviço para calcular automaticamente o momento em que o turno será extrapolado.</p>
+  </header>
 
-      <div class="result-meta">
-        <div class="meta-item">
-          <div class="k">Início informado</div>
-          <div class="v" id="metaInicio">-</div>
+  <main>
+    <div class="rail"></div>
+    <div class="body-pad">
+
+      <div class="field-row">
+        <div class="field">
+          <label for="inicio">Início do serviço</label>
+          <input type="datetime-local" id="inicio" step="60">
         </div>
-        <div class="meta-item">
-          <div class="k">Duração até a extrapolação</div>
-          <div class="v" id="metaDuracao">-</div>
-          <div class="jornada">
-            <span class="chip">8h de jornada programada</span>
-            <span class="op">+</span>
-            <span class="chip">2h de extra máxima</span>
-            <span class="op">=</span>
-            <span class="chip total">10h trabalhadas</span>
+        <button id="btnCalcular" type="button">Calcular</button>
+      </div>
+
+      <div class="error-msg" id="errorMsg"></div>
+
+      <div class="result" id="resultBox">
+        <div class="result-label">Data/hora da extrapolação</div>
+        <div class="result-value" id="resultValue">--/--/---- --:--</div>
+
+        <div class="result-meta">
+          <div class="meta-item">
+            <div class="k">Início informado</div>
+            <div class="v" id="metaInicio">-</div>
+          </div>
+          <div class="meta-item">
+            <div class="k">Duração até a extrapolação</div>
+            <div class="v" id="metaDuracao">-</div>
+            <div class="jornada">
+              <span class="chip">8h de jornada programada</span>
+              <span class="op">+</span>
+              <span class="chip">2h de extra máxima</span>
+              <span class="op">=</span>
+              <span class="chip total">10h trabalhadas</span>
+            </div>
+          </div>
+          <div class="meta-item">
+            <div class="k">Horário Limite da Intrajornada</div>
+            <div class="v" id="metaLimiteIntra">-</div>
           </div>
         </div>
-        <div class="meta-item">
-          <div class="k">Horário Limite da Intrajornada</div>
-          <div class="v" id="metaLimiteIntra">-</div>
+      </div>
+
+    </div>
+  </main>
+</section>
+
+<!-- ================= MÓDULO 2: DESCANSO FORA DA SEDE ================= -->
+<section class="view" id="view-fora">
+  <div class="back-row"><button type="button" class="ghost back" data-goto="view-home">&larr; Voltar ao Início</button></div>
+
+  <header>
+    <div class="eyebrow">MRS &middot; Turnos &middot; Escala</div>
+    <h1>Descanso Fora da Sede</h1>
+    <p class="subtitle">Informe o horário de apontamento da atividade de descanso para calcular a abertura da prontidão após o descanso no hotel.</p>
+  </header>
+
+  <main>
+    <div class="rail"></div>
+    <div class="body-pad">
+      <div class="field-row">
+        <div class="field">
+          <label for="foraInput">Horário de Apontamento da Atividade de Descanso</label>
+          <input type="time" id="foraInput">
+        </div>
+        <button id="foraCalc" type="button">Calcular</button>
+        <button id="foraClear" type="button" class="ghost">Limpar</button>
+      </div>
+
+      <div class="error-msg" id="foraErr"></div>
+
+      <div class="result" id="foraResult">
+        <div class="result-label">Horário de abertura da prontidão</div>
+        <div class="result-value" id="foraValue">--:--</div>
+        <div class="result-meta">
+          <div class="meta-item">
+            <div class="k">Apontamento informado</div>
+            <div class="v" id="foraMetaIn">-</div>
+          </div>
+          <div class="meta-item">
+            <div class="k">Tempo de descanso considerado</div>
+            <div class="v">10 horas</div>
+          </div>
         </div>
       </div>
     </div>
+  </main>
+</section>
 
-  </div>
-</main>
+<!-- ================= MÓDULO 3: DESCANSO EM SEDE ================= -->
+<section class="view" id="view-sede">
+  <div class="back-row"><button type="button" class="ghost back" data-goto="view-home">&larr; Voltar ao Início</button></div>
+
+  <header>
+    <div class="eyebrow">MRS &middot; Turnos &middot; Escala</div>
+    <h1>Descanso em Sede</h1>
+    <p class="subtitle">Informe o horário de fechamento de cardeno para calcular o horário mínimo de início da próxima atividade.</p>
+  </header>
+
+  <main>
+    <div class="rail"></div>
+    <div class="body-pad">
+      <div class="field-row">
+        <div class="field">
+          <label for="sedeInput">Horário de Fechamento de Cardeno</label>
+          <input type="time" id="sedeInput">
+        </div>
+        <button id="sedeCalc" type="button">Calcular</button>
+        <button id="sedeClear" type="button" class="ghost">Limpar</button>
+      </div>
+
+      <div class="error-msg" id="sedeErr"></div>
+
+      <div class="result" id="sedeResult">
+        <div class="result-label">Horário mínimo para iniciar a próxima atividade</div>
+        <div class="result-value" id="sedeValue">--:--</div>
+        <div class="result-meta">
+          <div class="meta-item">
+            <div class="k">Fechamento de cardeno informado</div>
+            <div class="v" id="sedeMetaIn">-</div>
+          </div>
+          <div class="meta-item">
+            <div class="k">Tempo de descanso considerado</div>
+            <div class="v">12 horas</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</section>
 
 <footer>Dúvidas e sugestões entrar em contato: 30033875@mrs.com.br (Paulo Lemos)</footer>
 
+<!-- ================= NAVEGAÇÃO ================= -->
+<script>
+(function(){
+  // Mostra apenas a tela escolhida, sem recarregar a página.
+  function mostrar(id){
+    document.querySelectorAll(".view").forEach(v => v.classList.toggle("active", v.id === id));
+    window.scrollTo(0, 0);
+  }
+  document.querySelectorAll("[data-goto]").forEach(el => {
+    el.addEventListener("click", () => mostrar(el.getAttribute("data-goto")));
+  });
+})();
+</script>
+
+<!-- ================= MÓDULO 1: EXTRAPOLAÇÃO (lógica original, sem alterações) ================= -->
 <script>
 (function(){
   const C = 68.57; // fator de eficiência usado na fórmula original (extrapolação do turno)
@@ -250,10 +409,65 @@
 })();
 </script>
 
+<!-- ================= MÓDULOS 2 e 3: DESCANSO (mesma lógica, parâmetros diferentes) ================= -->
+<script>
+(function(){
+  function pad(n){ return String(n).padStart(2, "0"); }
+
+  // Soma `horas` a um horário HH:MM; devolve o novo horário e quantos dias avançou.
+  function somarHoras(hhmm, horas){
+    const total = parseInt(hhmm.slice(0,2),10) * 60 + parseInt(hhmm.slice(3,5),10) + horas * 60;
+    const m = ((total % 1440) + 1440) % 1440;
+    return { texto: `${pad(Math.floor(m/60))}:${pad(m%60)}`, dias: Math.floor(total / 1440) };
+  }
+
+  // Cada módulo tem seus próprios elementos, então um não interfere no outro.
+  function iniciarModulo(cfg){
+    const input = document.getElementById(cfg.input);
+    const err = document.getElementById(cfg.err);
+    const box = document.getElementById(cfg.result);
+    const val = document.getElementById(cfg.value);
+    const metaIn = document.getElementById(cfg.metaIn);
+
+    function calcular(){
+      err.style.display = "none";
+      box.style.display = "none";
+      const v = input.value;
+      if (!v){
+        err.textContent = "Informe o horário no formato HH:MM.";
+        err.style.display = "block";
+        return;
+      }
+      if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(v)){
+        err.textContent = "Horário inválido. Use o formato HH:MM (00:00 a 23:59).";
+        err.style.display = "block";
+        return;
+      }
+      const r = somarHoras(v, cfg.horas);
+      val.innerHTML = `<span class="gold">${r.texto}</span>` + (r.dias > 0 ? ` <span class="chip">${r.dias === 1 ? "do dia seguinte" : "+" + r.dias + " dias"}</span>` : "");
+      metaIn.textContent = v;
+      box.style.display = "block";
+    }
+
+    function limpar(){
+      input.value = "";
+      err.style.display = "none";
+      box.style.display = "none";
+      input.focus();
+    }
+
+    document.getElementById(cfg.calc).addEventListener("click", calcular);
+    document.getElementById(cfg.clear).addEventListener("click", limpar);
+    input.addEventListener("keydown", (e) => { if (e.key === "Enter") calcular(); });
+  }
+
+  iniciarModulo({ input:"foraInput", err:"foraErr", result:"foraResult", value:"foraValue", metaIn:"foraMetaIn", calc:"foraCalc", clear:"foraClear", horas:10 });
+  iniciarModulo({ input:"sedeInput", err:"sedeErr", result:"sedeResult", value:"sedeValue", metaIn:"sedeMetaIn", calc:"sedeCalc", clear:"sedeClear", horas:12 });
+})();
+</script>
+
 </body>
 </html>
-
-
  
 
  
