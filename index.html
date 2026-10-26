@@ -229,7 +229,7 @@
     <div class="body-pad">
       <div class="field-row">
         <div class="field">
-          <label for="foraInput">Horário de Apontamento da Atividade de Descanso</label>
+          <label for="foraInput">Horário de Apontamento da Atividade de Descanso fora da Sede</label>
           <input type="time" id="foraInput">
         </div>
         <button id="foraCalc" type="button">Calcular</button>
@@ -237,7 +237,7 @@
       </div>
       <div class="error-msg" id="foraErr"></div>
       <div class="result" id="foraResult">
-        <div class="result-label">Horário de abertura da prontidão</div>
+        <div class="result-label">Horário previsto para a próxima atividade após o descanso</div>
         <div class="result-value" id="foraValue">--:--</div>
         <div class="result-meta">
           <div class="meta-item">
@@ -245,7 +245,7 @@
             <div class="v" id="foraMetaIn">-</div>
           </div>
           <div class="meta-item">
-            <div class="k">Tempo de descanso considerado</div>
+            <div class="k">Tempo de descanso fora da sede considerado</div>
             <div class="v">10 horas</div>
           </div>
         </div>
@@ -266,7 +266,7 @@
     <div class="body-pad">
       <div class="field-row">
         <div class="field">
-          <label for="sedeInput">Horário de Fechamento de Cardeno</label>
+          <label for="sedeInput">Horário de Fechamento de Cardeno na Sede</label>
           <input type="time" id="sedeInput">
         </div>
         <button id="sedeCalc" type="button">Calcular</button>
@@ -274,7 +274,7 @@
       </div>
       <div class="error-msg" id="sedeErr"></div>
       <div class="result" id="sedeResult">
-        <div class="result-label">Horário mínimo para iniciar a próxima atividade</div>
+        <div class="result-label">Horário mínimo permitido para novo início de jornada após o intervalo</div>
         <div class="result-value" id="sedeValue">--:--</div>
         <div class="result-meta">
           <div class="meta-item">
@@ -282,7 +282,7 @@
             <div class="v" id="sedeMetaIn">-</div>
           </div>
           <div class="meta-item">
-            <div class="k">Tempo de descanso considerado</div>
+            <div class="k">Tempo de intervalo mínimo na sede considerado</div>
             <div class="v">12 horas</div>
           </div>
         </div>
@@ -461,5 +461,3 @@
 </body>
 </html>
 
- 
- 
