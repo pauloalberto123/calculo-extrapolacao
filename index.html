@@ -129,6 +129,9 @@
     border:1px solid var(--chip-line);color:var(--ink);white-space:nowrap;
   }
   .chip.total{background:var(--navy-deep);border-color:var(--navy-deep);color:var(--panel);}
+  .split{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;font-size:13px;font-weight:600;}
+  .split .chip b{font-weight:700;}
+  .chip.extra{background:var(--navy-deep);border-color:var(--navy-deep);color:var(--panel);}
   .op{color:var(--ink-soft);}
   footer{margin-top:28px;font-size:12.5px;color:var(--ink-soft);text-align:center;}
   @media (prefers-reduced-motion: reduce){*{transition:none !important;}}
@@ -190,8 +193,12 @@
             <div class="v" id="metaInicio">-</div>
           </div>
           <div class="meta-item">
-            <div class="k">Duração até a extrapolação</div>
+            <div class="k">Duração total até a extrapolação</div>
             <div class="v" id="metaDuracao">-</div>
+            <div class="split">
+              <span class="chip">Serviço: <b id="metaServico">-</b></span>
+              <span class="chip extra">Hora extra: <b id="metaExtra">-</b></span>
+            </div>
             <div class="jornada">
               <span class="chip">8h de jornada programada</span>
               <span class="op">+</span>
@@ -239,7 +246,7 @@
           </div>
           <div class="meta-item">
             <div class="k">Tempo de descanso considerado</div>
-            <div class="v">10 horas e 1 minuto</div>
+            <div class="v">10 horas</div>
           </div>
         </div>
       </div>
@@ -276,7 +283,7 @@
           </div>
           <div class="meta-item">
             <div class="k">Tempo de descanso considerado</div>
-            <div class="v">12 horas e 1 minuto</div>
+            <div class="v">12 horas</div>
           </div>
         </div>
       </div>
@@ -332,12 +339,28 @@
     return `${Math.floor(totalMin / 60)}h ${pad(totalMin % 60)}min`;
   }
 
+  // Separa a duração total em Serviço (máx. 8h) e Hora extra (excedente)
+  function formatarParcela(min){
+    if (min === 0) return "0h";
+    const h = Math.floor(min / 60), m = min % 60;
+    if (m === 0) return `${h}h`;
+    return h === 0 ? `${m}min` : `${h}h ${pad(m)}min`;
+  }
+  function separarDuracao(diasFracao){
+    const totalMin = Math.round(diasFracao * 24 * 60);
+    const servico = Math.min(totalMin, 480);
+    const extra = Math.max(totalMin - 480, 0);
+    return { servico: formatarParcela(servico), extra: formatarParcela(extra) };
+  }
+
   const inicioInput = document.getElementById("inicio");
   const errorMsg = document.getElementById("errorMsg");
   const resultBox = document.getElementById("resultBox");
   const resultValue = document.getElementById("resultValue");
   const metaInicio = document.getElementById("metaInicio");
   const metaDuracao = document.getElementById("metaDuracao");
+  const metaServico = document.getElementById("metaServico");
+  const metaExtra = document.getElementById("metaExtra");
   const metaLimiteIntra = document.getElementById("metaLimiteIntra");
 
   function calcular(){
@@ -362,6 +385,9 @@
     resultValue.innerHTML = formatarDataHora(resultado).replace(/(\d{2}:\d{2})$/, '<span class="gold">$1</span>');
     metaInicio.textContent = formatarDataHora(inicio);
     metaDuracao.textContent = formatarDuracao(delta);
+    const sep = separarDuracao(delta);
+    metaServico.textContent = sep.servico;
+    metaExtra.textContent = sep.extra;
     metaLimiteIntra.textContent = formatarDataHora(calcularLimiteIntrajornada(inicio));
     resultBox.style.display = "block";
   }
@@ -425,7 +451,8 @@
     input.addEventListener("keydown", (e) => { if (e.key === "Enter") calcular(); });
   }
 
-  // Fora da sede: 10h01min (601 min) | Em sede: 12h01min (721 min)
+  // Cálculo interno (inalterado): Fora da sede 10h01min (601 min) | Em sede 12h01min (721 min)
+  // A exibição do "Tempo de descanso considerado" mostra apenas horas inteiras.
   iniciarModulo({ input:"foraInput", err:"foraErr", result:"foraResult", value:"foraValue", metaIn:"foraMetaIn", calc:"foraCalc", clear:"foraClear", minutos:601 });
   iniciarModulo({ input:"sedeInput", err:"sedeErr", result:"sedeResult", value:"sedeValue", metaIn:"sedeMetaIn", calc:"sedeCalc", clear:"sedeClear", minutos:721 });
 })();
@@ -433,8 +460,6 @@
 
 </body>
 </html>
-
- 
 
  
  
